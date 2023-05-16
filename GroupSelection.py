@@ -1,38 +1,32 @@
 from PyQt5 import Qt, QtWidgets
-from PyQt5.QtCore import Qt as Qtt, QTimer
-import psycopg2
-from PyQt5.QtGui import QFont
-import multiprocessing
-from threading import Thread
-import CheckStudents
-import ident
-import MAIID
-from MAIID import whois
+from PyQt5.QtCore import Qt as Qtt
+
+import Var
 
 
 class AddGroups(Qt.QDialog):
 
-    def __init__(self, name, role, parent=None):
+    def __init__(self, parent=None):
 
         super().__init__(parent)
         self.setGeometry(0, 0, 1000, 600)
         self.setWindowTitle('Посещаемость')
 
         self.group_list = []
-        self.roles_copy = list(roles)
+        self.roles_copy = list(Var.roles)
 
         self.label = Qt.QLabel('Выберите группу(-ы)')
         self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
         self.label.setAlignment(Qtt.AlignCenter)
 
         self.groups = Qt.QLabel()
-        self.groups.setFont(font)
+        self.groups.setFont(Var.font)
 
         self.table = Qt.QTableWidget()
-        self.table.setFont(font)
+        self.table.setFont(Var.font)
 
         self.start = Qt.QPushButton('Старт!')
-        self.start.setFont(font)
+        self.start.setFont(Var.font)
 
         self.v_layout = Qt.QVBoxLayout(self)
         self.v_layout.addWidget(self.label)
@@ -80,20 +74,4 @@ class AddGroups(Qt.QDialog):
     def start_btn(self):
         self.accept()
 
-
-connection = psycopg2.connect(
-        database="maiid",
-        user="postgres",
-        password="12345",
-        host="127.0.0.1",
-        port="5432"
-    )
-cursor = connection.cursor()
-
-font = QFont()
-font.setFamily('MS Shell Dlg 2')
-font.setPointSize(10)
-
-roles = ['Преподаватель', 'М3О-416Б-19', 'М3О-417Бк-19', 'М3О-418Бк-19', 'Слушатель', 'Роль не выбрана']
-roles.sort()
 

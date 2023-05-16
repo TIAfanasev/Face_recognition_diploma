@@ -1,10 +1,9 @@
 from PyQt5 import Qt, QtWidgets
 from PyQt5.QtCore import Qt as Qtt
 import UserProfile
-import psycopg2
-from PyQt5.QtGui import QFont
 import shutil
 
+import Var
 import make_cascade
 
 
@@ -21,19 +20,19 @@ class AllUsersWindow(Qt.QDialog):
         self.label.setAlignment(Qtt.AlignCenter)
 
         self.search_label = Qt.QLabel('Поиск:')
-        self.search_label.setFont(font)
+        self.search_label.setFont(Var.font)
 
         self.search_field = Qt.QTextEdit()
         self.search_field.setPlaceholderText('Введите строку для поиска')
         self.search_field.setFixedHeight(32)
-        self.search_field.setFont(font)
+        self.search_field.setFont(Var.font)
 
         self.search_button = Qt.QPushButton('Найти!')
-        self.search_button.setFont(font)
+        self.search_button.setFont(Var.font)
 
         self.select_role = Qt.QComboBox(self)
-        self.select_role.addItems(roles)
-        self.select_role.setFont(font)
+        self.select_role.addItems(Var.roles)
+        self.select_role.setFont(Var.font)
         self.select_role.setCurrentText('Роль не выбрана')
 
         self.table = Qt.QTableWidget()
@@ -83,9 +82,9 @@ class AllUsersWindow(Qt.QDialog):
             display_query = f"SELECT * FROM faces WHERE role = '{role_now.encode('cp866').decode('cp1251')}' " \
                             f"AND fio LIKE '%{search}%' ORDER BY fio DESC"
 
-        cursor.execute(display_query)
-        connection.commit()
-        records = cursor.fetchall()
+        Var.cursor.execute(display_query)
+        Var.connection.commit()
+        records = Var.cursor.fetchall()
 
         for row in records:
             row_count = self.table.rowCount()
@@ -140,25 +139,10 @@ class AllUsersWindow(Qt.QDialog):
                                      Qt.QMessageBox.Yes | Qt.QMessageBox.Cancel, Qt.QMessageBox.Cancel)
         if msg == Qt.QMessageBox.Yes:
             work_query = f"DELETE FROM faces WHERE id = '{usr}'"
-            cursor.execute(work_query)
-            connection.commit()
+            Var.cursor.execute(work_query)
+            Var.connection.commit()
             shutil.rmtree(f"Images\\{usr}")
             make_cascade.del_elem(usr)
             self.table_filling()
 
 
-connection = psycopg2.connect(
-        database="maiid",
-        user="postgres",
-        password="12345",
-        host="127.0.0.1",
-        port="5432"
-    )
-cursor = connection.cursor()
-
-font = QFont()
-font.setFamily('MS Shell Dlg 2')
-font.setPointSize(10)
-
-roles = ['Преподаватель', 'М3О-416Б-19', 'М3О-417Бк-19', 'М3О-418Бк-19', 'Слушатель', 'Роль не выбрана']
-roles.sort()

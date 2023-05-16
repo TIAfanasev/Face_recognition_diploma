@@ -1,18 +1,13 @@
-from PyQt5 import Qt, QtWidgets
+from PyQt5 import Qt
 from PyQt5.QtCore import Qt as Qtt, QTimer
-from PyQt5.QtGui import QFont
 import sys
+
+import ident
 import GroupSelection
 import UserProfile
 import AllUsers
-import biometric
-import make_cascade
-import ident
-import psycopg2
-import shutil
-from threading import Thread
 import CheckStudents
-import multiprocessing
+import Var
 
 
 def make_new():
@@ -21,19 +16,25 @@ def make_new():
 
 
 def whois():
-    user = ident.__init__()
-    if user == -1:
-        print(f'Распознан неизвестный человек')
+    idnt = ident.Ident()
+    idnt.show()
+    user = idnt.recognize_faces()
+    if user:
+        if user == -1:
+            print(f'Распознан неизвестный человек')
+            return [0, 0]
+        elif user != -2:
+            work_query = f'SELECT fio, role FROM faces WHERE id = %s'
+            Var.cursor.execute(work_query, (user,))
+            Var.connection.commit()
+            records = Var.cursor.fetchall()
+            fio = bytes(records[0][0], 'cp1251').decode('cp866')
+            role = bytes(records[0][1], 'cp1251').decode('cp866')
+            print(f'Распознан {fio} ({role})')
+            return [fio, role]
+    else:
+        print('Прерывание распознавания')
         return [0, 0]
-    elif user != -2:
-        work_query = f'SELECT fio, role FROM faces WHERE id = %s'
-        cursor.execute(work_query, (user,))
-        connection.commit()
-        records = cursor.fetchall()
-        fio = bytes(records[0][0], 'cp1251').decode('cp866')
-        role = bytes(records[0][1], 'cp1251').decode('cp866')
-        print(f'Распознан {fio} ({role})')
-        return [fio, role]
 
 
 def go_to_list():
@@ -86,42 +87,24 @@ class MainWindow(Qt.QWidget):
             QTimer.singleShot(5000, msg.close)
             msg.exec_()
         else:
-            st = GroupSelection.AddGroups(name, role, parent=self)
+            st = GroupSelection.AddGroups(parent=self)
             if st.exec_():
                 t_lst = st.groups.text()
-                #print(t_lst)
+                # print(t_lst)
                 gr_list = t_lst.split(sep="; ")
                 gr_list.remove("")
-                #print(gr_list)
-                ch = CheckStudents.Check(gr_list, connection, cursor)
+                # print(gr_list)
+                ch = CheckStudents.Check(gr_list)
                 ch.exec_()
 
-
-connection = psycopg2.connect(
-        database="maiid",
-        user="postgres",
-        password="12345",
-        host="127.0.0.1",
-        port="5432"
-    )
-cursor = connection.cursor()
 
 if __name__ == '__main__':
     # Подключение к БД
     app = Qt.QApplication(sys.argv)
-
-    font = QFont()
-    font.setFamily('MS Shell Dlg 2')
-    font.setPointSize(10)
-
-    roles = ['Преподаватель', 'М3О-416Б-19', 'М3О-417Бк-19', 'М3О-418Бк-19', 'Слушатель', 'Роль не выбрана']
-    roles.sort()
 
     w = MainWindow()
     w.show()
     try:
         sys.exit(app.exec_())
     finally:
-        connection.close()
-
-
+        Var.connection.close()

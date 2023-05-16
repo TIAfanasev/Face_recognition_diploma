@@ -1,10 +1,10 @@
 from PyQt5 import Qt
 from PyQt5.QtCore import Qt as Qtt
-import make_cascade
 import shutil
-import psycopg2
-from PyQt5.QtGui import QFont
+
+import make_cascade
 import biometric
+import Var
 
 
 class FaceWindow(Qt.QDialog):
@@ -26,38 +26,38 @@ class FaceWindow(Qt.QDialog):
         else:
             self.ID_label = Qt.QLabel(f'ID: {user_id}')
             self.setWindowTitle('Редактирование пользователя')
-        self.ID_label.setFont(font)
+        self.ID_label.setFont(Var.font)
 
         self.FIO_label = Qt.QLabel('ФИО:')
-        self.FIO_label.setFont(font)
+        self.FIO_label.setFont(Var.font)
         self.FIO = Qt.QTextEdit()
-        self.FIO.setFont(font)
+        self.FIO.setFont(Var.font)
         self.FIO.setPlaceholderText('Пример: Иванов Иван Иванович')
         #self.fio_cl = one_query('fio', 'clients', self.id_cl)
         #self.FIO.setText(bytes(self.fio_cl, 'cp1251').decode('cp866'))
 
         self.Role_label = Qt.QLabel('Группа/Должность:')
-        self.Role_label.setFont(font)
+        self.Role_label.setFont(Var.font)
         self.Role = Qt.QComboBox(self)
-        self.Role.setFont(font)
-        self.Role.addItems(roles)
+        self.Role.setFont(Var.font)
+        self.Role.addItems(Var.roles)
         self.Role.setCurrentText('---Выберите роль---')
         #self.Role.setFontPointSize(10)
         # self.phone_cl = one_query('phone', 'clients', self.id_cl)
         #self.Role.setText(self.phone_cl)
 
         self.Phone_label = Qt.QLabel('Номер телефона:')
-        self.Phone_label.setFont(font)
+        self.Phone_label.setFont(Var.font)
         self.Phone = Qt.QTextEdit()
-        self.Phone.setFont(font)
+        self.Phone.setFont(Var.font)
         self.Phone.setPlaceholderText('Номер телефона в формате +7XXXXXXXXXX')
         # self.phone_cl = one_query('phone', 'clients', self.id_cl)
         #self.Phone.setText('+7' + self.phone_cl)
 
         self.Balance_label = Qt.QLabel('Баланс (₽):')
-        self.Balance_label.setFont(font)
+        self.Balance_label.setFont(Var.font)
         self.Balance = Qt.QTextEdit()
-        self.Balance.setFont(font)
+        self.Balance.setFont(Var.font)
 
         self.add_face = Qt.QPushButton('Перейти к съемке')
         self.confirm = Qt.QPushButton('Подтвердить')
@@ -75,9 +75,9 @@ class FaceWindow(Qt.QDialog):
 
         if user_id != 0:
             work_query = f'SELECT fio, role, phone, balance FROM faces WHERE id = %s'
-            cursor.execute(work_query, (user_id,))
-            connection.commit()
-            records = cursor.fetchall()
+            Var.cursor.execute(work_query, (user_id,))
+            Var.connection.commit()
+            records = Var.cursor.fetchall()
 
             self.FIO.setText(records[0][0].encode('cp1251').decode('cp866'))
             self.Role.setCurrentText(records[0][1].encode('cp1251').decode('cp866'))
@@ -123,8 +123,8 @@ class FaceWindow(Qt.QDialog):
                 phone = phone[2:]
                 work_query = f"UPDATE faces SET fio = '{fio}', role = '{role}', phone = '{phone}', " \
                              f"balance = '{int(balance)}' WHERE id = {self.user_id}"
-                cursor.execute(work_query)
-                connection.commit()
+                Var.cursor.execute(work_query)
+                Var.connection.commit()
         else:
             make_cascade.update_cascade(self.id_user)
         self.accept()
@@ -133,8 +133,8 @@ class FaceWindow(Qt.QDialog):
         if not self.user_id:
             if self.confirm.isEnabled():
                 work_query = f"DELETE FROM faces WHERE id = '{self.id_user}'"
-                cursor.execute(work_query)
-                connection.commit()
+                Var.cursor.execute(work_query)
+                Var.connection.commit()
                 shutil.rmtree(f"Images\\{self.id_user}")
             self.reject()
         else:
@@ -153,18 +153,18 @@ class FaceWindow(Qt.QDialog):
             phone = phone [2:]
             work_query = f'INSERT INTO faces (fio, role, phone) ' \
                          f'VALUES (\'{fio}\', \'{role}\', \'{phone}\')'
-            cursor.execute(work_query)
-            connection.commit()
+            Var.cursor.execute(work_query)
+            Var.connection.commit()
             work_query = f'SELECT id FROM faces WHERE fio = %s AND role = %s AND phone = %s'
-            cursor.execute(work_query, (fio, role, phone,))
-            connection.commit()
-            records = cursor.fetchall()
+            Var.cursor.execute(work_query, (fio, role, phone,))
+            Var.connection.commit()
+            records = Var.cursor.fetchall()
             self.id_user = records[0][0]
             self.ID_label.setText(f'ID: {self.id_user}')
             if not biometric.__init__(self.id_user):
                 work_query = f'DELETE FROM faces WHERE id = \'{self.id_user}\''
-                cursor.execute(work_query)
-                connection.commit()
+                Var.cursor.execute(work_query)
+                Var.connection.commit()
                 shutil.rmtree(f"Images\\{self.id_user}")
                 self.lower_label.setText('Ошибка записи')
                 self.lower_label.setStyleSheet("color:red; font: 7pt 'MS Shell Dlg 2';")
@@ -175,20 +175,3 @@ class FaceWindow(Qt.QDialog):
                 self.confirm.setEnabled(True)
 
             self.lower_label.setEnabled(True)
-
-
-connection = psycopg2.connect(
-        database="maiid",
-        user="postgres",
-        password="12345",
-        host="127.0.0.1",
-        port="5432"
-    )
-cursor = connection.cursor()
-
-font = QFont()
-font.setFamily('MS Shell Dlg 2')
-font.setPointSize(10)
-
-roles = ['Преподаватель', 'М3О-416Б-19', 'М3О-417Бк-19', 'М3О-418Бк-19', 'Слушатель', 'Роль не выбрана']
-roles.sort()
