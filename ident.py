@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTableWidget, \
     QTableWidgetItem, QLabel
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QIcon
 from PyQt5.QtCore import Qt as Qtt
 from PyQt5 import Qt
 import face_recognition
@@ -17,7 +17,7 @@ def get_frame_color(counter):
     elif counter == 2:
         return 255, 255, 0  # Желтый
     elif counter == 3:
-        return 0, 255, 0  # Желто-зеленый
+        return 165, 255, 165  # Желто-зеленый
     elif counter == 4:
         return 0, 255, 165  # Салатовый
     else:
@@ -27,9 +27,10 @@ def get_frame_color(counter):
 class Ident(Qt.QDialog):
     def __init__(self, table_window=None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Face Recognition")
+        self.setWindowTitle("Распознавание - MAI ID")
+        self.setWindowIcon(QIcon("Icon.png"))
         self.setWindowFlags(Qtt.WindowCloseButtonHint)
-        self.setGeometry(1030, 80, 650, 490)
+        self.setGeometry(1250, 250, 666, 506)
 
         self.image_label = QLabel(self)
 

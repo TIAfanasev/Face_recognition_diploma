@@ -1,4 +1,4 @@
-from PyQt5 import Qt, QtWidgets
+from PyQt5 import Qt, QtWidgets, QtGui
 from PyQt5.QtCore import Qt as Qtt
 import ident
 import Var
@@ -20,7 +20,8 @@ class Check(Qt.QDialog):
 
         super().__init__()
         self.setGeometry(0, 0, 1000, 600)
-        self.setWindowTitle('Посещаемость')
+        self.setWindowTitle('Посещаемость - MAI ID')
+        self.setWindowIcon(QtGui.QIcon("Icon.png"))
 
         # self.group_list = group_list
         self.labels_list = []

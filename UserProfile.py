@@ -1,5 +1,5 @@
-from PyQt5 import Qt
-from PyQt5.QtCore import Qt as Qtt
+from PyQt5 import Qt, QtGui
+from PyQt5.QtCore import Qt as Qtt, QTimer
 import shutil
 
 import make_cascade
@@ -12,7 +12,8 @@ class FaceWindow(Qt.QDialog):
     def __init__(self, user_id=0):
         super().__init__()
         self.setGeometry(0, 0, 1500, 600)
-        self.setWindowTitle('Добавление пользователя')
+        self.setWindowTitle('Добавление пользователя - MAI ID')
+        self.setWindowIcon(QtGui.QIcon("Icon.png"))
 
         self.label = Qt.QLabel('Анкета')
         self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
@@ -48,23 +49,28 @@ class FaceWindow(Qt.QDialog):
 
         self.Phone_label = Qt.QLabel('Номер телефона:')
         self.Phone_label.setFont(Var.font)
-        self.Phone = Qt.QTextEdit()
+        self.Phone = Qt.QLineEdit()
         self.Phone.setFont(Var.font)
-        self.Phone.setPlaceholderText('Номер телефона в формате +7XXXXXXXXXX')
+        self.Phone.setInputMask('+7(999)999-99-99;_')
         # self.phone_cl = one_query('phone', 'clients', self.id_cl)
-        #self.Phone.setText('+7' + self.phone_cl)
 
         self.Balance_label = Qt.QLabel('Баланс (₽):')
         self.Balance_label.setFont(Var.font)
         self.Balance = Qt.QTextEdit()
         self.Balance.setFont(Var.font)
+        self.Balance.setPlaceholderText("Например: 5000 (без копеек)")
 
         self.add_face = Qt.QPushButton('Перейти к съемке')
+        self.add_face.setFont(Var.font)
         self.confirm = Qt.QPushButton('Подтвердить')
+        self.confirm.setFont(Var.font)
         self.cancel = Qt.QPushButton('Отмена')
+        self.cancel.setFont(Var.font)
         self.delete = Qt.QPushButton('Удалить')
         self.delete.setStyleSheet('background-color: #DB4139; border-radius: 6px; color: white;'
                                   'min-width: 10em; padding: 4px')
+        self.delete.setFont(Var.font)
+
 
         self.lower_label = Qt.QLabel()
         self.lower_label.setEnabled(False)
@@ -81,7 +87,7 @@ class FaceWindow(Qt.QDialog):
 
             self.FIO.setText(records[0][0].encode('cp1251').decode('cp866'))
             self.Role.setCurrentText(records[0][1].encode('cp1251').decode('cp866'))
-            self.Phone.setText('+7' + records[0][2])
+            self.Phone.setText(records[0][2])
             self.Balance.setText(str(records[0][3]))
 
             self.add_face.setEnabled(False)
@@ -111,23 +117,23 @@ class FaceWindow(Qt.QDialog):
         if self.user_id:
             fio = self.FIO.toPlainText().encode('cp866').decode('cp1251')
             role = self.Role.currentText().encode('cp866').decode('cp1251')
-            phone = self.Phone.toPlainText()
+            phone = self.Phone.text()[1:]
+            phone = int(''.join(filter(str.isdigit, phone))[1:])
+            print(phone)
             balance = self.Balance.toPlainText()
-            if not (fio and role and phone) or role == '---Выберите роль---':
+            if not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
                 Qt.QMessageBox.critical(self, 'Ошибка!', 'Заполните все поля!')
-            elif not (phone[0:2] == '+7' and len(phone[2:]) == 10 and phone[2:].isdigit()):
-                Qt.QMessageBox.critical(self, 'Ошибка!', 'Введите номер в формате: \n +7ХХХХХХХХХХ')
             elif not balance.isdigit():
                 Qt.QMessageBox.critical(self, 'Ошибка!', 'В поле Баланс \n можно вводить только цифры')
             else:
-                phone = phone[2:]
                 work_query = f"UPDATE faces SET fio = '{fio}', role = '{role}', phone = '{phone}', " \
                              f"balance = '{int(balance)}' WHERE id = {self.user_id}"
                 Var.cursor.execute(work_query)
                 Var.connection.commit()
+                self.accept()
         else:
             make_cascade.update_cascade(self.id_user)
-        self.accept()
+            self.accept()
 
     def cncl_btn(self):
         if not self.user_id:
@@ -143,35 +149,46 @@ class FaceWindow(Qt.QDialog):
     def new_face(self):
         fio = self.FIO.toPlainText().encode('cp866').decode('cp1251')
         role = self.Role.currentText().encode('cp866').decode('cp1251')
-        phone = self.Phone.toPlainText()
+        phone = self.Phone.text()[1:]
+        phone = int(''.join(filter(str.isdigit, phone))[1:])
+        print(phone)
         balance = self.Balance.toPlainText()
-        if not (fio and role and phone) or role == 'Роль не выбрана':
+        if not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
             Qt.QMessageBox.critical(self, 'Ошибка!', 'Заполните все поля!')
-        elif not (phone[0:2] == '+7' and len(phone[2:]) == 10 and phone[2:].isdigit()):
-            Qt.QMessageBox.critical(self, 'Ошибка!', 'Введите номер в формате: \n +7ХХХХХХХХХХ')
+        elif not balance.isdigit():
+            Qt.QMessageBox.critical(self, 'Ошибка!', 'В поле Баланс \n можно вводить только цифры')
         else:
-            phone = phone [2:]
-            work_query = f'INSERT INTO faces (fio, role, phone) ' \
-                         f'VALUES (\'{fio}\', \'{role}\', \'{phone}\')'
-            Var.cursor.execute(work_query)
-            Var.connection.commit()
-            work_query = f'SELECT id FROM faces WHERE fio = %s AND role = %s AND phone = %s'
-            Var.cursor.execute(work_query, (fio, role, phone,))
+            work_query = f'SELECT phone FROM faces WHERE phone = %s'
+            Var.cursor.execute(work_query, (str(phone),))
             Var.connection.commit()
             records = Var.cursor.fetchall()
-            self.id_user = records[0][0]
-            self.ID_label.setText(f'ID: {self.id_user}')
-            if not biometric.__init__(self.id_user):
-                work_query = f'DELETE FROM faces WHERE id = \'{self.id_user}\''
+            if records:
+                msg = Qt.QMessageBox(Qt.QMessageBox.Critical, "Ошибка!", "Указаный номер телефона уже используется!",
+                                     Qt.QMessageBox.Close)
+                QTimer.singleShot(5000, msg.close)
+                msg.exec_()
+            else:
+                work_query = f'INSERT INTO faces (fio, role, phone, balance) ' \
+                             f'VALUES (\'{fio}\', \'{role}\', \'{phone}\', \'{balance}\')'
                 Var.cursor.execute(work_query)
                 Var.connection.commit()
-                shutil.rmtree(f"Images\\{self.id_user}")
-                self.lower_label.setText('Ошибка записи')
-                self.lower_label.setStyleSheet("color:red; font: 7pt 'MS Shell Dlg 2';")
-            else:
-                self.add_face.setEnabled(False)
-                self.lower_label.setText('Биометрия записана успешно')
-                self.lower_label.setStyleSheet("color:green; font: 7pt 'MS Shell Dlg 2';")
-                self.confirm.setEnabled(True)
+                work_query = f'SELECT id FROM faces WHERE fio = %s AND role = %s AND phone = %s'
+                Var.cursor.execute(work_query, (fio, role, str(phone),))
+                Var.connection.commit()
+                records = Var.cursor.fetchall()
+                self.id_user = records[0][0]
+                self.ID_label.setText(f'ID: {self.id_user}')
+                if not biometric.__init__(self.id_user):
+                    work_query = f'DELETE FROM faces WHERE id = \'{self.id_user}\''
+                    Var.cursor.execute(work_query)
+                    Var.connection.commit()
+                    shutil.rmtree(f"Images\\{self.id_user}")
+                    self.lower_label.setText('Ошибка записи')
+                    self.lower_label.setStyleSheet("color:red; font: 7pt 'MS Shell Dlg 2';")
+                else:
+                    self.add_face.setEnabled(False)
+                    self.lower_label.setText('Биометрия записана успешно')
+                    self.lower_label.setStyleSheet("color:green; font: 7pt 'MS Shell Dlg 2';")
+                    self.confirm.setEnabled(True)
 
-            self.lower_label.setEnabled(True)
+                self.lower_label.setEnabled(True)

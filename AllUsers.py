@@ -1,4 +1,4 @@
-from PyQt5 import Qt, QtWidgets
+from PyQt5 import Qt, QtWidgets, QtGui
 from PyQt5.QtCore import Qt as Qtt
 import UserProfile
 import shutil
@@ -13,7 +13,8 @@ class AllUsersWindow(Qt.QDialog):
 
         super().__init__()
         self.setGeometry(0, 0, 1500, 600)
-        self.setWindowTitle('Список всех пользователей')
+        self.setWindowTitle('Список всех пользователей - MAI ID')
+        self.setWindowIcon(QtGui.QIcon("Icon.png"))
 
         self.label = Qt.QLabel('Все пользователи')
         self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
@@ -29,6 +30,7 @@ class AllUsersWindow(Qt.QDialog):
 
         self.search_button = Qt.QPushButton('Найти!')
         self.search_button.setFont(Var.font)
+        self.search_button.setStyleSheet('color: #0095DA;')
 
         self.select_role = Qt.QComboBox(self)
         self.select_role.addItems(Var.roles)
@@ -60,6 +62,7 @@ class AllUsersWindow(Qt.QDialog):
             self.table_filling()
         else:
             self.table_filling(1)
+        self.search_field.setText("")
 
     def table_filling(self, from_btn=0):
 
@@ -141,8 +144,10 @@ class AllUsersWindow(Qt.QDialog):
             work_query = f"DELETE FROM faces WHERE id = '{usr}'"
             Var.cursor.execute(work_query)
             Var.connection.commit()
-            shutil.rmtree(f"Images\\{usr}")
-            make_cascade.del_elem(usr)
-            self.table_filling()
+            try:
+                shutil.rmtree(f"Images\\{usr}")
+                make_cascade.del_elem(usr)
+            finally:
+                self.table_filling()
 
 

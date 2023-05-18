@@ -1,4 +1,4 @@
-from PyQt5 import Qt, QtWidgets
+from PyQt5 import Qt, QtWidgets, QtGui
 from PyQt5.QtCore import Qt as Qtt
 
 import Var
@@ -10,7 +10,8 @@ class AddGroups(Qt.QDialog):
 
         super().__init__(parent)
         self.setGeometry(0, 0, 1000, 600)
-        self.setWindowTitle('Посещаемость')
+        self.setWindowTitle('Посещаемость - MAI ID')
+        self.setWindowIcon(QtGui.QIcon("Icon.png"))
 
         self.group_list = []
         self.roles_copy = list(Var.roles)

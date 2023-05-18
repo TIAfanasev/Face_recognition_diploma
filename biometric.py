@@ -37,7 +37,7 @@ def __init__(new_id):
                 cv2.imwrite(filename, frame)
                 count += 1
 
-        cv2.putText(frame, f'{count}/100', (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame, f'{count}/100', (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (210, 139, 0), 2, cv2.LINE_AA)
         cv2.imshow('Press Q for Quit', frame)  # отображение кадра на экране
         if cv2.waitKey(1) == ord('q'):  # остановка программы при нажатии клавиши 'q'
             res_flag = 0

@@ -1,5 +1,6 @@
 from PyQt5 import Qt
-from PyQt5.QtCore import Qt as Qtt, QTimer
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtCore import Qt as Qtt, QTimer, QSize
 import sys
 
 import ident
@@ -8,6 +9,7 @@ import UserProfile
 import AllUsers
 import CheckStudents
 import Var
+import Pay
 
 
 def make_new():
@@ -22,7 +24,12 @@ def whois():
     if user:
         if user == -1:
             print(f'Распознан неизвестный человек')
-            return [0, 0]
+            msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Успешно!", f'Распознан неизвестный человек',
+                                 Qt.QMessageBox.Close)
+            msg.setWindowIcon(QIcon("Icon.png"))
+            QTimer.singleShot(5000, msg.close)
+            if msg.exec_():
+                return [0, 0]
         elif user != -2:
             work_query = f'SELECT fio, role FROM faces WHERE id = %s'
             Var.cursor.execute(work_query, (user,))
@@ -31,10 +38,19 @@ def whois():
             fio = bytes(records[0][0], 'cp1251').decode('cp866')
             role = bytes(records[0][1], 'cp1251').decode('cp866')
             print(f'Распознан {fio} ({role})')
-            return [fio, role]
+            msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Успешно!", f'Распознан {fio} ({role})',
+                                 Qt.QMessageBox.Close)
+            msg.setWindowIcon(QIcon("Icon.png"))
+            QTimer.singleShot(5000, msg.close)
+            if msg.exec_():
+                return [fio, role]
     else:
         print('Прерывание распознавания')
-        return [0, 0]
+        msg = Qt.QMessageBox(Qt.QMessageBox.Warning, "Внимание!", f'Распознавание прервано', Qt.QMessageBox.Close)
+        msg.setWindowIcon(QIcon("Icon.png"))
+        QTimer.singleShot(5000, msg.close)
+        if msg.exec_():
+            return [0, 0]
 
 
 def go_to_list():
@@ -42,34 +58,90 @@ def go_to_list():
     lw.exec_()
 
 
-class MainWindow(Qt.QWidget):
+def pay_mai():
+    p = Pay.Pay()
+    p.exec_()
+
+
+class MainWindow(Qt.QMainWindow):
 
     def __init__(self):
         super().__init__()
 
         # Прорисовка окна приложения
         self.setGeometry(0, 0, 1500, 600)
-        self.setWindowTitle('Окно администратора')
+        self.setWindowTitle('Окно администратора - MAI ID')
+        self.setWindowIcon(QIcon("Icon.png"))
 
-        self.label = Qt.QLabel('Главное окно')
-        self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
+        central_widget = Qt.QWidget()
+        self.setCentralWidget(central_widget)
+
+        self.label = Qt.QLabel()
+        pixmap = QPixmap('Icon.png')
+        pixmap = pixmap.scaled(QSize(500, 500), Qtt.KeepAspectRatio, Qtt.SmoothTransformation)
+        self.label.setPixmap(pixmap)
+        self.label.resize(400, 400)
         self.label.setAlignment(Qtt.AlignCenter)
 
-        self.new_face_btn = Qt.QPushButton('Добавление нового пользователя')
-        self.check_btn = Qt.QPushButton('Распознать')
-        self.list_btn = Qt.QPushButton('Все пользователи')
-        self.checklist_btn = Qt.QPushButton('Чек-лист')
+        qss = 'QPushButton {background-color: #0095DA;' \
+              'border-style: outset;'\
+              'border-width: 2px;'\
+              'border-radius: 6px;'\
+              'border-color: #FFFFFF;'\
+              'font: bold 30px;'\
+              'min-width: 10em;'\
+              'padding: 6px;'\
+              'color: #FFFFFF;' \
+              'margin: 18px;' \
+              'text-align:left}'
 
-        self.button_layout = Qt.QHBoxLayout()
+        self.new_face_btn = Qt.QPushButton('Добавление пользователя')
+        self.new_face_btn.setIcon(QIcon('Add.png'))
+        self.new_face_btn.setIconSize(QSize(50, 50))
+        self.new_face_btn.setFont(Var.font)
+        self.new_face_btn.setStyleSheet(qss)
+
+        self.check_btn = Qt.QPushButton('Распознать пользователя')
+        self.check_btn.setIcon(QIcon('face.png'))
+        self.check_btn.setIconSize(QSize(50, 50))
+        self.check_btn.setFont(Var.font)
+        self.check_btn.setStyleSheet(qss)
+
+        self.list_btn = Qt.QPushButton('Все пользователи')
+        self.list_btn.setIcon(QIcon('Users.png'))
+        self.list_btn.setIconSize(QSize(50, 50))
+        self.list_btn.setFont(Var.font)
+        self.list_btn.setStyleSheet(qss)
+
+        self.checklist_btn = Qt.QPushButton('Отметить посещение')
+        self.checklist_btn.setIcon(QIcon('Check.png'))
+        self.checklist_btn.setIconSize(QSize(50, 50))
+        self.checklist_btn.setFont(Var.font)
+        self.checklist_btn.setStyleSheet(qss)
+
+        self.pay_btn = Qt.QPushButton('Оплата')
+        self.pay_btn.setIcon(QIcon('Pay.png'))
+        self.pay_btn.setIconSize(QSize(50, 50))
+        self.pay_btn.setFont(Var.font)
+        self.pay_btn.setStyleSheet(qss)
+
+        self.button_layout = Qt.QVBoxLayout()
         self.button_layout.addWidget(self.list_btn)
         self.button_layout.addWidget(self.new_face_btn)
         self.button_layout.addWidget(self.check_btn)
         self.button_layout.addWidget(self.checklist_btn)
-        self.button_layout.setAlignment(Qtt.AlignCenter)
+        self.button_layout.addWidget(self.pay_btn)
+        #self.button_layout.addStretch(1)
+        self.btn_layout = Qt.QHBoxLayout()
+        self.btn_layout.addLayout(self.button_layout)
+        self.btn_layout.setAlignment(Qtt.AlignCenter)
 
-        self.v_layout = Qt.QVBoxLayout(self)
+        self.v_layout = Qt.QHBoxLayout()
         self.v_layout.addWidget(self.label)
-        self.v_layout.addLayout(self.button_layout)
+        self.v_layout.addLayout(self.btn_layout)
+        self.v_layout.setAlignment(Qtt.AlignVCenter)
+
+        central_widget.setLayout(self.v_layout)
 
         # Нажатие кнопки добавления лица
         self.new_face_btn.clicked.connect(make_new)
@@ -79,6 +151,8 @@ class MainWindow(Qt.QWidget):
         self.list_btn.clicked.connect(go_to_list)
 
         self.checklist_btn.clicked.connect(self.start_les)
+
+        self.pay_btn.clicked.connect(pay_mai)
 
     def start_les(self):
         name, role = whois()
@@ -102,8 +176,18 @@ if __name__ == '__main__':
     # Подключение к БД
     app = Qt.QApplication(sys.argv)
 
+    stylesheet = """
+        QMainWindow {
+            background-image: url("sky.jpg"); 
+            background-repeat: no-repeat; 
+            background-position: center;
+        }
+    """
+
+    app.setStyleSheet(stylesheet)
+
     w = MainWindow()
-    w.show()
+    w.showMaximized()
     try:
         sys.exit(app.exec_())
     finally:
