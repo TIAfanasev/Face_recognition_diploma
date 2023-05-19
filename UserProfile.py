@@ -1,10 +1,15 @@
+import time
 from PyQt5 import Qt, QtGui
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt as Qtt, QTimer
 import shutil
+import threading
 
 import make_cascade
 import biometric
 import Var
+import AllUsers
+import Loader
 
 
 class FaceWindow(Qt.QDialog):
@@ -14,6 +19,7 @@ class FaceWindow(Qt.QDialog):
         self.setGeometry(0, 0, 1500, 600)
         self.setWindowTitle('Добавление пользователя - MAI ID')
         self.setWindowIcon(QtGui.QIcon("Icon.png"))
+        self.setModal(False)
 
         self.label = Qt.QLabel('Анкета')
         self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
@@ -52,7 +58,6 @@ class FaceWindow(Qt.QDialog):
         self.Phone = Qt.QLineEdit()
         self.Phone.setFont(Var.font)
         self.Phone.setInputMask('+7(999)999-99-99;_')
-        # self.phone_cl = one_query('phone', 'clients', self.id_cl)
 
         self.Balance_label = Qt.QLabel('Баланс (₽):')
         self.Balance_label.setFont(Var.font)
@@ -66,11 +71,6 @@ class FaceWindow(Qt.QDialog):
         self.confirm.setFont(Var.font)
         self.cancel = Qt.QPushButton('Отмена')
         self.cancel.setFont(Var.font)
-        self.delete = Qt.QPushButton('Удалить')
-        self.delete.setStyleSheet('background-color: #DB4139; border-radius: 6px; color: white;'
-                                  'min-width: 10em; padding: 4px')
-        self.delete.setFont(Var.font)
-
 
         self.lower_label = Qt.QLabel()
         self.lower_label.setEnabled(False)
@@ -110,7 +110,6 @@ class FaceWindow(Qt.QDialog):
         v_layout.addWidget(self.lower_label)
         v_layout.addWidget(self.add_face)
         v_layout.addLayout(btn_layout)
-        v_layout.addWidget(self.delete)
         self.setLayout(v_layout)
 
     def cnf_btn(self):
@@ -132,8 +131,17 @@ class FaceWindow(Qt.QDialog):
                 Var.connection.commit()
                 self.accept()
         else:
-            make_cascade.update_cascade(self.id_user)
+            self.thread = threading.Thread(target=self.calc_emb)
+            self.thread.start()
+
+            self.splash = Loader.Movie(parent=self)
+            self.splash.exec_()
+
             self.accept()
+
+    def calc_emb(self):
+        make_cascade.update_cascade(self.id_user)
+        self.splash.accept()
 
     def cncl_btn(self):
         if not self.user_id:
@@ -149,8 +157,9 @@ class FaceWindow(Qt.QDialog):
     def new_face(self):
         fio = self.FIO.toPlainText().encode('cp866').decode('cp1251')
         role = self.Role.currentText().encode('cp866').decode('cp1251')
-        phone = self.Phone.text()[1:]
-        phone = int(''.join(filter(str.isdigit, phone))[1:])
+        phone = self.Phone.text()[2:]
+        if phone:
+            phone = int(''.join(filter(str.isdigit, phone)))
         print(phone)
         balance = self.Balance.toPlainText()
         if not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
@@ -178,7 +187,9 @@ class FaceWindow(Qt.QDialog):
                 records = Var.cursor.fetchall()
                 self.id_user = records[0][0]
                 self.ID_label.setText(f'ID: {self.id_user}')
-                if not biometric.__init__(self.id_user):
+                bm = biometric.Cam(self.id_user)
+                bm.show()
+                if not bm.main(self.id_user):
                     work_query = f'DELETE FROM faces WHERE id = \'{self.id_user}\''
                     Var.cursor.execute(work_query)
                     Var.connection.commit()

@@ -2,6 +2,7 @@ from PyQt5 import Qt, QtWidgets, QtGui
 from PyQt5.QtCore import Qt as Qtt
 import UserProfile
 import shutil
+import os
 
 import Var
 import make_cascade
@@ -144,10 +145,9 @@ class AllUsersWindow(Qt.QDialog):
             work_query = f"DELETE FROM faces WHERE id = '{usr}'"
             Var.cursor.execute(work_query)
             Var.connection.commit()
-            try:
+            if os.path.exists(f'Images/{usr}'):
                 shutil.rmtree(f"Images\\{usr}")
-                make_cascade.del_elem(usr)
-            finally:
-                self.table_filling()
+            make_cascade.del_elem(usr)
+            self.table_filling()
 
 

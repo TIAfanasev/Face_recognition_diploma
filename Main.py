@@ -77,53 +77,41 @@ class MainWindow(Qt.QMainWindow):
         self.setCentralWidget(central_widget)
 
         self.label = Qt.QLabel()
-        pixmap = QPixmap('Icon.png')
-        pixmap = pixmap.scaled(QSize(500, 500), Qtt.KeepAspectRatio, Qtt.SmoothTransformation)
+        pixmap = QPixmap('Logo.png')
+        pixmap = pixmap.scaled(QSize(600, 600), Qtt.KeepAspectRatio, Qtt.SmoothTransformation)
         self.label.setPixmap(pixmap)
-        self.label.resize(400, 400)
+        self.label.resize(600, 600)
         self.label.setAlignment(Qtt.AlignCenter)
-
-        qss = 'QPushButton {background-color: #0095DA;' \
-              'border-style: outset;'\
-              'border-width: 2px;'\
-              'border-radius: 6px;'\
-              'border-color: #FFFFFF;'\
-              'font: bold 30px;'\
-              'min-width: 10em;'\
-              'padding: 6px;'\
-              'color: #FFFFFF;' \
-              'margin: 18px;' \
-              'text-align:left}'
 
         self.new_face_btn = Qt.QPushButton('Добавление пользователя')
         self.new_face_btn.setIcon(QIcon('Add.png'))
         self.new_face_btn.setIconSize(QSize(50, 50))
         self.new_face_btn.setFont(Var.font)
-        self.new_face_btn.setStyleSheet(qss)
+        self.new_face_btn.setStyleSheet(Var.qss)
 
         self.check_btn = Qt.QPushButton('Распознать пользователя')
         self.check_btn.setIcon(QIcon('face.png'))
         self.check_btn.setIconSize(QSize(50, 50))
         self.check_btn.setFont(Var.font)
-        self.check_btn.setStyleSheet(qss)
+        self.check_btn.setStyleSheet(Var.qss)
 
         self.list_btn = Qt.QPushButton('Все пользователи')
         self.list_btn.setIcon(QIcon('Users.png'))
         self.list_btn.setIconSize(QSize(50, 50))
         self.list_btn.setFont(Var.font)
-        self.list_btn.setStyleSheet(qss)
+        self.list_btn.setStyleSheet(Var.qss)
 
         self.checklist_btn = Qt.QPushButton('Отметить посещение')
         self.checklist_btn.setIcon(QIcon('Check.png'))
         self.checklist_btn.setIconSize(QSize(50, 50))
         self.checklist_btn.setFont(Var.font)
-        self.checklist_btn.setStyleSheet(qss)
+        self.checklist_btn.setStyleSheet(Var.qss)
 
         self.pay_btn = Qt.QPushButton('Оплата')
         self.pay_btn.setIcon(QIcon('Pay.png'))
         self.pay_btn.setIconSize(QSize(50, 50))
         self.pay_btn.setFont(Var.font)
-        self.pay_btn.setStyleSheet(qss)
+        self.pay_btn.setStyleSheet(Var.qss)
 
         self.button_layout = Qt.QVBoxLayout()
         self.button_layout.addWidget(self.list_btn)
@@ -168,12 +156,12 @@ class MainWindow(Qt.QMainWindow):
                 gr_list = t_lst.split(sep="; ")
                 gr_list.remove("")
                 # print(gr_list)
-                ch = CheckStudents.Check(gr_list)
+                ch = CheckStudents.Check(gr_list, name)
                 ch.exec_()
 
 
 if __name__ == '__main__':
-    # Подключение к БД
+
     app = Qt.QApplication(sys.argv)
 
     stylesheet = """

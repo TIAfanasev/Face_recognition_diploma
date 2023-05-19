@@ -1,5 +1,5 @@
 from PyQt5 import Qt, QtGui
-from PyQt5.QtCore import Qt as Qtt, QTimer
+from PyQt5.QtCore import Qt as Qtt, QTimer, QSize
 
 import ident
 import Var
@@ -17,6 +17,13 @@ class Pay(Qt.QDialog):
         self.label = Qt.QLabel('Произвести оплату')
         self.label.setStyleSheet("color:#0095DA; font: bold 20pt 'MS Shell Dlg 2';")
         self.label.setAlignment(Qtt.AlignHCenter)
+
+        self.image_label = Qt.QLabel()
+        pixmap = QtGui.QPixmap('Pay2.png')
+        pixmap = pixmap.scaled(QSize(300, 300), Qtt.KeepAspectRatio, Qtt.SmoothTransformation)
+        self.image_label.setPixmap(pixmap)
+        self.image_label.resize(300, 300)
+        self.image_label.setAlignment(Qtt.AlignCenter)
 
         self.input_comment = Qt.QLabel("Введите сумму:")
         self.input_comment.setFont(Var.font)
@@ -38,6 +45,7 @@ class Pay(Qt.QDialog):
 
         self.layout = Qt.QVBoxLayout(self)
         self.layout.addWidget(self.label)
+        self.layout.addWidget(self.image_label)
         self.layout.addLayout(self.input_layout)
         self.layout.addWidget(self.pay_button)
 

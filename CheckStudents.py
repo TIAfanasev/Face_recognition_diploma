@@ -1,10 +1,17 @@
-from PyQt5 import Qt, QtWidgets, QtGui
-from PyQt5.QtCore import Qt as Qtt
+from PyQt5 import Qt, QtWidgets
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt as Qtt, QSize, QTimer
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font
+import datetime
+import os
+
 import ident
 import Var
 
 
-def table_filling(table, stud=None):
+def table_filling(table):
     table.clear()
     table.setRowCount(0)
     table.setColumnCount(1)
@@ -16,17 +23,18 @@ def table_filling(table, stud=None):
 
 class Check(Qt.QDialog):
 
-    def __init__(self, group_list):
+    def __init__(self, group_list, teacher):
 
         super().__init__()
         self.setGeometry(0, 0, 1000, 600)
         self.setWindowTitle('Посещаемость - MAI ID')
-        self.setWindowIcon(QtGui.QIcon("Icon.png"))
+        self.setWindowIcon(QIcon("Icon.png"))
 
         # self.group_list = group_list
         self.labels_list = []
         self.tables_list = []
         self.labels_text = group_list
+        self.teacher = teacher
 
         for x in group_list:
             self.labels_list.append(Qt.QLabel(x))
@@ -37,13 +45,29 @@ class Check(Qt.QDialog):
         self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
         self.label.setAlignment(Qtt.AlignCenter)
 
+        self.label = Qt.QLabel(f'Преподаватель: {self.teacher}')
+        self.label.setStyleSheet("color:black; font: 10pt 'MS Shell Dlg 2';")
+        self.label.setAlignment(Qtt.AlignRight)
+
         self.start_btn = Qt.QPushButton()
         self.start_btn.setText("Старт")
 
+        self.excel_btn = Qt.QPushButton()
+        self.excel_btn.setIcon(QIcon('Excel.png'))
+        self.excel_btn.setIconSize(QSize(40, 40))
+        self.excel_btn.setFixedSize(40, 40)
+        self.excel_btn.setStyleSheet('{background-color: #FFFFFF; '
+                                     'border-width: 0px; '
+                                     'border-radius: 6px; '
+                                     'border-color: #FFFFFF;')
 
+        self.excel_layout = Qt.QVBoxLayout()
+        self.excel_layout.addWidget(self.excel_btn)
+        self.excel_layout.setAlignment(Qtt.AlignRight)
 
         self.v_layout = Qt.QVBoxLayout(self)
         self.v_layout.addWidget(self.label)
+        self.v_layout.addLayout(self.excel_layout)
         for x in range(len(self.labels_list)):
             self.v_layout.addWidget(self.labels_list[x])
             self.v_layout.addWidget(self.tables_list[x])
@@ -54,6 +78,8 @@ class Check(Qt.QDialog):
             table_filling(self.tables_list[x])
 
         self.start_btn.clicked.connect(self.startstop)
+
+        self.excel_btn.clicked.connect(self.excel_export)
 
     def add_name(self, id_user):
         work_query = f"SELECT fio, role FROM faces WHERE id = '{id_user}'"
@@ -77,8 +103,8 @@ class Check(Qt.QDialog):
     def startstop(self):
         if self.start_btn.text() == "Старт":
             #self.start_btn.setEnabled(False)
-            self.ident = ident.Ident(self)
             self.start_btn.setText("Стоп")
+            self.ident = ident.Ident(self)
             self.ident.closed = False
             self.ident.show()
             self.ident.recognize_faces()
@@ -86,6 +112,50 @@ class Check(Qt.QDialog):
             self.ident.closed = True
             self.ident.close()
             self.start_btn.setText("Старт")
+
+    def excel_export(self):
+        if not os.path.exists(f'{str(self.teacher)}'):
+            os.mkdir(f'{str(self.teacher)}')
+        # Создаем новую рабочую книгу
+        workbook = Workbook()
+        sheet = workbook.active
+
+        # Копируем данные из QTableWidget в рабочую книгу
+        current_row = 1
+        fio_column = 'A'
+        check_column = 'B'
+        for group in self.labels_text:
+            work_query = f"SELECT fio FROM faces WHERE role = '{group.encode('cp866').decode('cp1251')}'"
+            Var.cursor.execute(work_query)
+            Var.connection.commit()
+            records = Var.cursor.fetchall()
+            table = self.tables_list[self.labels_text.index(group)]
+            students = []
+            for x in records:
+                students.append(x[0].encode('cp1251').decode('cp866'))
+            students.sort()
+            st_in_class = []
+            for row in range(table.rowCount()):
+                st_in_class.append(table.item(row, 0).text())
+            sheet[fio_column + str(current_row)] = group
+            current_row += 1
+            for st in range(len(students)):
+                sheet[fio_column + str(current_row)] = students[st]
+                if students[st] in st_in_class:
+                    sheet[check_column + str(current_row)] = '+'
+                else:
+                    sheet[check_column + str(current_row)] = 'Н'
+                current_row += 1
+            current_row += 2
+
+        # Сохраняем рабочую книгу
+        dt = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+        full_folder_path = os.path.join(os.getcwd(), f'{str(self.teacher)}', f'{str(dt)}.xlsx')
+        workbook.save(full_folder_path)
+
+        msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Выполнено!", "Excel-таблица сохранена!", Qt.QMessageBox.Close)
+        QTimer.singleShot(5000, msg.close)
+        msg.exec_()
 
 
 

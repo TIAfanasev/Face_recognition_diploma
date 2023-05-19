@@ -16,3 +16,15 @@ roles = sorted(roles)
 font = QFont()
 font.setFamily('MS Shell Dlg 2')
 font.setPointSize(10)
+
+qss = 'QPushButton {background-color: #0095DA;' \
+              'border-style: outset;'\
+              'border-width: 2px;'\
+              'border-radius: 6px;'\
+              'border-color: #FFFFFF;'\
+              'font: bold 30px;'\
+              'min-width: 10em;'\
+              'padding: 6px;'\
+              'color: #FFFFFF;' \
+              'margin: 18px;' \
+              'text-align:left}'
