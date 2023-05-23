@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTableWidget, \
     QTableWidgetItem, QLabel
 from PyQt5.QtGui import QImage, QPixmap, QIcon
-from PyQt5.QtCore import Qt as Qtt
+from PyQt5.QtCore import Qt as Qtt, QTimer
 from PyQt5 import Qt
 import face_recognition
 import pickle
 import cv2
 import sys
+
+import Var
 
 
 def get_frame_color(counter):
@@ -25,7 +27,7 @@ def get_frame_color(counter):
 
 
 class Ident(Qt.QDialog):
-    def __init__(self, table_window=None, parent=None):
+    def __init__(self, table_window=None, stream=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Распознавание - MAI ID")
         self.setWindowIcon(QIcon("Icon.png"))
@@ -36,6 +38,7 @@ class Ident(Qt.QDialog):
 
         self.data = pickle.loads(open('face_enc', "rb").read())
         self.table_window = table_window
+        self.stream = stream
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.image_label)
@@ -89,9 +92,20 @@ class Ident(Qt.QDialog):
                     # Записываем имя в таблицу в окне TableWindow
                     if self.table_window:
                         self.table_window.add_name(id_user)
-                    else:
+                    elif not self.stream:
                         out_flag = True
                         break
+                    else:
+                        access = Var.stream(id_user)
+                        if access:
+                            msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Успешно!", 'Доступ разрешен',
+                                                 Qt.QMessageBox.Close)
+                        else:
+                            msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Внимание!", 'Доступ запрещен',
+                                                 Qt.QMessageBox.Close)
+                        msg.setWindowIcon(QIcon("Icon.png"))
+                        QTimer.singleShot(2000, msg.close)
+                        msg.exec_()
                     conf_count = 0
 
                 color = get_frame_color(conf_count)

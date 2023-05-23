@@ -1,6 +1,4 @@
-import time
 from PyQt5 import Qt, QtGui
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt as Qtt, QTimer
 import shutil
 import threading
@@ -8,7 +6,6 @@ import threading
 import make_cascade
 import biometric
 import Var
-import AllUsers
 import Loader
 
 
@@ -16,23 +13,22 @@ class FaceWindow(Qt.QDialog):
 
     def __init__(self, user_id=0):
         super().__init__()
-        self.setGeometry(0, 0, 1500, 600)
-        self.setWindowTitle('Добавление пользователя - MAI ID')
+        self.setGeometry(560, 240, 800, 600)
         self.setWindowIcon(QtGui.QIcon("Icon.png"))
         self.setModal(False)
 
         self.label = Qt.QLabel('Анкета')
-        self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
+        self.label.setStyleSheet("color:#0095DA; font: bold 20pt 'MS Shell Dlg 2';")
         self.label.setAlignment(Qtt.AlignCenter)
 
         self.user_id = user_id
 
         if user_id == 0:
             self.ID_label = Qt.QLabel('ID: (устанавливается автоматически)')
-            self.setWindowTitle('Добавление пользователя')
+            self.setWindowTitle('Добавление пользователя - MAI ID')
         else:
             self.ID_label = Qt.QLabel(f'ID: {user_id}')
-            self.setWindowTitle('Редактирование пользователя')
+            self.setWindowTitle('Редактирование пользователя - MAI ID')
         self.ID_label.setFont(Var.font)
 
         self.FIO_label = Qt.QLabel('ФИО:')
@@ -48,7 +44,7 @@ class FaceWindow(Qt.QDialog):
         self.Role = Qt.QComboBox(self)
         self.Role.setFont(Var.font)
         self.Role.addItems(Var.roles)
-        self.Role.setCurrentText('---Выберите роль---')
+        self.Role.setCurrentText('Роль не выбрана')
         #self.Role.setFontPointSize(10)
         # self.phone_cl = one_query('phone', 'clients', self.id_cl)
         #self.Role.setText(self.phone_cl)
@@ -158,11 +154,21 @@ class FaceWindow(Qt.QDialog):
         fio = self.FIO.toPlainText().encode('cp866').decode('cp1251')
         role = self.Role.currentText().encode('cp866').decode('cp1251')
         phone = self.Phone.text()[2:]
+        balance = self.Balance.toPlainText()
         if phone:
             phone = int(''.join(filter(str.isdigit, phone)))
-        print(phone)
-        balance = self.Balance.toPlainText()
-        if not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
+        # print(phone)
+        work_query = f"SELECT phone FROM faces"
+        Var.cursor.execute(work_query)
+        Var.connection.commit()
+        records = Var.cursor.fetchall()
+        phone_unique = True
+        for rec in records:
+            if rec[0] == phone:
+                phone_unique = False
+        if not phone_unique:
+            Qt.QMessageBox.critical(self, 'Ошибка!', 'Номер телефона уже используется!')
+        elif not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
             Qt.QMessageBox.critical(self, 'Ошибка!', 'Заполните все поля!')
         elif not balance.isdigit():
             Qt.QMessageBox.critical(self, 'Ошибка!', 'В поле Баланс \n можно вводить только цифры')

@@ -1,5 +1,6 @@
 import psycopg2
 from PyQt5.QtGui import QFont
+import pickle
 
 connection = psycopg2.connect(
         database="maiid",
@@ -10,8 +11,9 @@ connection = psycopg2.connect(
     )
 cursor = connection.cursor()
 
-roles = ['Преподаватель', 'М3О-416Б-19', 'М3О-417Бк-19', 'М3О-418Бк-19', 'Слушатель', 'Роль не выбрана']
+roles = pickle.loads(open('roles', "rb").read())
 roles = sorted(roles)
+print(roles)
 
 font = QFont()
 font.setFamily('MS Shell Dlg 2')
@@ -28,3 +30,14 @@ qss = 'QPushButton {background-color: #0095DA;' \
               'color: #FFFFFF;' \
               'margin: 18px;' \
               'text-align:left}'
+
+
+def stream(usr):
+    work_query = f'SELECT * FROM faces WHERE id = {usr}'
+    cursor.execute(work_query)
+    connection.commit()
+    records = cursor.fetchall()
+    if records:
+        return True
+    else:
+        return False

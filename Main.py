@@ -10,11 +10,18 @@ import AllUsers
 import CheckStudents
 import Var
 import Pay
+import Roles
 
 
 def make_new():
     ec = UserProfile.FaceWindow()
     ec.exec_()
+
+
+def start_stream():
+    s = ident.Ident(stream=True)
+    s.show()
+    end = s.recognize_faces()
 
 
 def whois():
@@ -63,6 +70,11 @@ def pay_mai():
     p.exec_()
 
 
+def add_role():
+    t = Roles.Roles()
+    t.exec_()
+
+
 class MainWindow(Qt.QMainWindow):
 
     def __init__(self):
@@ -83,7 +95,7 @@ class MainWindow(Qt.QMainWindow):
         self.label.resize(600, 600)
         self.label.setAlignment(Qtt.AlignCenter)
 
-        self.new_face_btn = Qt.QPushButton('Добавление пользователя')
+        self.new_face_btn = Qt.QPushButton('Добавить пользователя')
         self.new_face_btn.setIcon(QIcon('Add.png'))
         self.new_face_btn.setIconSize(QSize(50, 50))
         self.new_face_btn.setFont(Var.font)
@@ -94,6 +106,12 @@ class MainWindow(Qt.QMainWindow):
         self.check_btn.setIconSize(QSize(50, 50))
         self.check_btn.setFont(Var.font)
         self.check_btn.setStyleSheet(Var.qss)
+
+        self.access_btn = Qt.QPushButton('Контроль доступа')
+        #self.check_btn.setIcon(QIcon('face.png'))
+        #self.check_btn.setIconSize(QSize(50, 50))
+        self.access_btn.setFont(Var.font)
+        self.access_btn.setStyleSheet(Var.qss)
 
         self.list_btn = Qt.QPushButton('Все пользователи')
         self.list_btn.setIcon(QIcon('Users.png'))
@@ -113,12 +131,19 @@ class MainWindow(Qt.QMainWindow):
         self.pay_btn.setFont(Var.font)
         self.pay_btn.setStyleSheet(Var.qss)
 
+        self.add_role_btn = Qt.QPushButton('Добавить роль')
+        self.add_role_btn.setIconSize(QSize(50, 50))
+        self.add_role_btn.setFont(Var.font)
+        self.add_role_btn.setStyleSheet(Var.qss)
+
         self.button_layout = Qt.QVBoxLayout()
         self.button_layout.addWidget(self.list_btn)
         self.button_layout.addWidget(self.new_face_btn)
         self.button_layout.addWidget(self.check_btn)
+        self.button_layout.addWidget(self.access_btn)
         self.button_layout.addWidget(self.checklist_btn)
         self.button_layout.addWidget(self.pay_btn)
+        self.button_layout.addWidget(self.add_role_btn)
         #self.button_layout.addStretch(1)
         self.btn_layout = Qt.QHBoxLayout()
         self.btn_layout.addLayout(self.button_layout)
@@ -141,6 +166,10 @@ class MainWindow(Qt.QMainWindow):
         self.checklist_btn.clicked.connect(self.start_les)
 
         self.pay_btn.clicked.connect(pay_mai)
+
+        self.add_role_btn.clicked.connect(add_role)
+
+        self.access_btn.clicked.connect(start_stream)
 
     def start_les(self):
         name, role = whois()
