@@ -89,9 +89,9 @@ class Ident(Qt.QDialog):
                     conf_count = 1
                     t_id = id_user
                 if conf_count >= 5:
-                    # Записываем имя в таблицу в окне TableWindow
                     if self.table_window:
-                        self.table_window.add_name(id_user)
+                        if id_user != -1:
+                            self.table_window.add_name(id_user)
                     elif not self.stream:
                         out_flag = True
                         break
@@ -136,32 +136,3 @@ class Ident(Qt.QDialog):
         event.accept()
         self.close()
 
-
-class TableWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Recognized Faces")
-
-        self.table_widget = QTableWidget(self)
-        self.table_widget.setColumnCount(1)  # Устанавливаем один столбец
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.table_widget)
-        self.setLayout(layout)
-
-    def add_name(self, name):
-        row_count = self.table_widget.rowCount()
-        self.table_widget.insertRow(row_count)
-        item = QTableWidgetItem(name)
-        self.table_widget.setItem(row_count, 0, item)
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    table_window = TableWindow()
-    table_window.show()
-    im = Ident(table_window)
-    im.show()
-    print(im.recognize_faces())
-    if im.disconnect():
-        sys.exit(app.exec_())

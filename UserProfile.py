@@ -13,7 +13,7 @@ class FaceWindow(Qt.QDialog):
 
     def __init__(self, user_id=0):
         super().__init__()
-        self.setGeometry(560, 240, 800, 600)
+        self.setGeometry(560, 340, 690, 200)
         self.setWindowIcon(QtGui.QIcon("Icon.png"))
         self.setModal(False)
 
@@ -35,9 +35,8 @@ class FaceWindow(Qt.QDialog):
         self.FIO_label.setFont(Var.font)
         self.FIO = Qt.QTextEdit()
         self.FIO.setFont(Var.font)
+        self.FIO.setFixedHeight(37)
         self.FIO.setPlaceholderText('Пример: Иванов Иван Иванович')
-        #self.fio_cl = one_query('fio', 'clients', self.id_cl)
-        #self.FIO.setText(bytes(self.fio_cl, 'cp1251').decode('cp866'))
 
         self.Role_label = Qt.QLabel('Группа/Должность:')
         self.Role_label.setFont(Var.font)
@@ -45,9 +44,6 @@ class FaceWindow(Qt.QDialog):
         self.Role.setFont(Var.font)
         self.Role.addItems(Var.roles)
         self.Role.setCurrentText('Роль не выбрана')
-        #self.Role.setFontPointSize(10)
-        # self.phone_cl = one_query('phone', 'clients', self.id_cl)
-        #self.Role.setText(self.phone_cl)
 
         self.Phone_label = Qt.QLabel('Номер телефона:')
         self.Phone_label.setFont(Var.font)
@@ -59,6 +55,7 @@ class FaceWindow(Qt.QDialog):
         self.Balance_label.setFont(Var.font)
         self.Balance = Qt.QTextEdit()
         self.Balance.setFont(Var.font)
+        self.Balance.setFixedHeight(37)
         self.Balance.setPlaceholderText("Например: 5000 (без копеек)")
 
         self.add_face = Qt.QPushButton('Перейти к съемке')
@@ -91,6 +88,7 @@ class FaceWindow(Qt.QDialog):
         else:
             self.confirm.setEnabled(False)
         v_layout = Qt.QVBoxLayout()
+        v_layout.addWidget(self.label)
         v_layout.addWidget(self.ID_label)
         v_layout.addWidget(self.FIO_label)
         v_layout.addWidget(self.FIO)
@@ -114,18 +112,30 @@ class FaceWindow(Qt.QDialog):
             role = self.Role.currentText().encode('cp866').decode('cp1251')
             phone = self.Phone.text()[1:]
             phone = int(''.join(filter(str.isdigit, phone))[1:])
-            print(phone)
+            #print(phone)
             balance = self.Balance.toPlainText()
-            if not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
+            if not (fio and role and balance) or role == 'Роль не выбрана'.encode('cp866').decode('cp1251') \
+                    or phone < 1000000000:
                 Qt.QMessageBox.critical(self, 'Ошибка!', 'Заполните все поля!')
             elif not balance.isdigit():
                 Qt.QMessageBox.critical(self, 'Ошибка!', 'В поле Баланс \n можно вводить только цифры')
             else:
-                work_query = f"UPDATE faces SET fio = '{fio}', role = '{role}', phone = '{phone}', " \
-                             f"balance = '{int(balance)}' WHERE id = {self.user_id}"
-                Var.cursor.execute(work_query)
+                work_query = f'SELECT phone FROM faces WHERE phone = %s'
+                Var.cursor.execute(work_query, (str(phone),))
                 Var.connection.commit()
-                self.accept()
+                records = Var.cursor.fetchall()
+                if records:
+                    msg = Qt.QMessageBox(Qt.QMessageBox.Critical, "Ошибка!",
+                                         "Указаный номер телефона уже используется!",
+                                         Qt.QMessageBox.Close)
+                    QTimer.singleShot(5000, msg.close)
+                    msg.exec_()
+                else:
+                    work_query = f"UPDATE faces SET fio = '{fio}', role = '{role}', phone = '{phone}', " \
+                                 f"balance = '{int(balance)}' WHERE id = {self.user_id}"
+                    Var.cursor.execute(work_query)
+                    Var.connection.commit()
+                    self.accept()
         else:
             self.thread = threading.Thread(target=self.calc_emb)
             self.thread.start()
@@ -157,18 +167,7 @@ class FaceWindow(Qt.QDialog):
         balance = self.Balance.toPlainText()
         if phone:
             phone = int(''.join(filter(str.isdigit, phone)))
-        # print(phone)
-        work_query = f"SELECT phone FROM faces"
-        Var.cursor.execute(work_query)
-        Var.connection.commit()
-        records = Var.cursor.fetchall()
-        phone_unique = True
-        for rec in records:
-            if rec[0] == phone:
-                phone_unique = False
-        if not phone_unique:
-            Qt.QMessageBox.critical(self, 'Ошибка!', 'Номер телефона уже используется!')
-        elif not (fio and role and balance) or role == 'Роль не выбрана' or phone < 1000000000:
+        if not (fio and role and balance) or role == 'Роль не выбрана'.encode('cp866').decode('cp1251') or phone < 1000000000:
             Qt.QMessageBox.critical(self, 'Ошибка!', 'Заполните все поля!')
         elif not balance.isdigit():
             Qt.QMessageBox.critical(self, 'Ошибка!', 'В поле Баланс \n можно вводить только цифры')

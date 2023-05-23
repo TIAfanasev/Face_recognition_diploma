@@ -2,8 +2,6 @@ from PyQt5 import Qt, QtWidgets
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt as Qtt, QSize, QTimer
 from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
-from openpyxl.styles import Font
 import datetime
 import os
 
@@ -155,6 +153,7 @@ class Check(Qt.QDialog):
 
         msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Выполнено!", "Excel-таблица сохранена!", Qt.QMessageBox.Close)
         QTimer.singleShot(5000, msg.close)
+        msg.setIcon(QIcon("Icon.png"))
         msg.exec_()
 
 

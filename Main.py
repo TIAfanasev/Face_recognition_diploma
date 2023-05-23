@@ -108,8 +108,8 @@ class MainWindow(Qt.QMainWindow):
         self.check_btn.setStyleSheet(Var.qss)
 
         self.access_btn = Qt.QPushButton('Контроль доступа')
-        #self.check_btn.setIcon(QIcon('face.png'))
-        #self.check_btn.setIconSize(QSize(50, 50))
+        self.access_btn.setIcon(QIcon('Control.png'))
+        self.access_btn.setIconSize(QSize(50, 50))
         self.access_btn.setFont(Var.font)
         self.access_btn.setStyleSheet(Var.qss)
 
@@ -131,7 +131,8 @@ class MainWindow(Qt.QMainWindow):
         self.pay_btn.setFont(Var.font)
         self.pay_btn.setStyleSheet(Var.qss)
 
-        self.add_role_btn = Qt.QPushButton('Добавить роль')
+        self.add_role_btn = Qt.QPushButton('Роли')
+        self.add_role_btn.setIcon(QIcon('Roles.png'))
         self.add_role_btn.setIconSize(QSize(50, 50))
         self.add_role_btn.setFont(Var.font)
         self.add_role_btn.setStyleSheet(Var.qss)
@@ -173,18 +174,17 @@ class MainWindow(Qt.QMainWindow):
 
     def start_les(self):
         name, role = whois()
-        if role not in ['Преподаватель', 'Администратор']:
+        if role not in ['Преподаватель']:
             msg = Qt.QMessageBox(Qt.QMessageBox.Critical, "Ошибка!", "Отказано в доступе!", Qt.QMessageBox.Close)
+            msg.setWindowIcon(QIcon("Icon.png"))
             QTimer.singleShot(5000, msg.close)
             msg.exec_()
         else:
             st = GroupSelection.AddGroups(parent=self)
             if st.exec_():
                 t_lst = st.groups.text()
-                # print(t_lst)
                 gr_list = t_lst.split(sep="; ")
                 gr_list.remove("")
-                # print(gr_list)
                 ch = CheckStudents.Check(gr_list, name)
                 ch.exec_()
 

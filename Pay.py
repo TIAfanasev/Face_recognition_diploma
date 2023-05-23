@@ -1,5 +1,6 @@
 from PyQt5 import Qt, QtGui
 from PyQt5.QtCore import Qt as Qtt, QTimer, QSize
+from PyQt5.QtGui import QIcon
 
 import ident
 import Var
@@ -10,7 +11,7 @@ class Pay(Qt.QDialog):
     def __init__(self, sum_to_pay=None):
         super().__init__()
 
-        self.setGeometry(300, 300, 600, 400)
+        self.setGeometry(660, 340, 600, 400)
         self.setWindowTitle('Оплата - MAI ID')
         self.setWindowIcon(QtGui.QIcon("Icon.png"))
 
@@ -52,12 +53,18 @@ class Pay(Qt.QDialog):
         self.pay_button.clicked.connect(self.check_field)
 
     def check_field(self):
-        try:
-            int(self.input_field.toPlainText())
-        except Exception:
-            self.input_field.setText("")
-        else:
-            self.recognition()
+        if self.input_field.toPlainText():
+            try:
+                int(self.input_field.toPlainText())
+            except ValueError:
+                self.input_field.setText("")
+                msg = Qt.QMessageBox(Qt.QMessageBox.Warning, "Ошибка!", f'Введите целое число в поле суммы',
+                                     Qt.QMessageBox.Close)
+                msg.setWindowIcon(QIcon("Icon.png"))
+                QTimer.singleShot(5000, msg.close)
+                msg.exec_()
+            else:
+                self.recognition()
 
     def recognition(self):
         i = ident.Ident()
@@ -76,12 +83,14 @@ class Pay(Qt.QDialog):
                 Var.cursor.execute(work_query)
                 Var.connection.commit()
                 msg = Qt.QMessageBox(Qt.QMessageBox.Information, "Успешно!", "Оплата осуществлена!", Qt.QMessageBox.Close)
+                msg.setWindowIcon(QIcon("Icon.png"))
                 QTimer.singleShot(5000, msg.close)
                 if msg.exec_():
                     self.close()
             else:
                 msg = Qt.QMessageBox(Qt.QMessageBox.Warning, "Отказано!", "Недостаточно средств на счете!",
                                      Qt.QMessageBox.Close)
+                msg.setWindowIcon(QIcon("Icon.png"))
                 QTimer.singleShot(5000, msg.close)
                 if msg.exec_():
                     self.input_field.setText("")

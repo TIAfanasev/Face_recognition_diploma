@@ -13,7 +13,6 @@ cursor = connection.cursor()
 
 roles = pickle.loads(open('roles', "rb").read())
 roles = sorted(roles)
-print(roles)
 
 font = QFont()
 font.setFamily('MS Shell Dlg 2')

@@ -9,7 +9,7 @@ class AddGroups(Qt.QDialog):
     def __init__(self, parent=None):
 
         super().__init__(parent)
-        self.setGeometry(0, 0, 1000, 600)
+        self.setGeometry(560, 240, 800, 600)
         self.setWindowTitle('Посещаемость - MAI ID')
         self.setWindowIcon(QtGui.QIcon("Icon.png"))
 
@@ -17,7 +17,7 @@ class AddGroups(Qt.QDialog):
         self.roles_copy = list(Var.roles)
 
         self.label = Qt.QLabel('Выберите группу(-ы)')
-        self.label.setStyleSheet("color:black; font: bold 20pt 'MS Shell Dlg 2';")
+        self.label.setStyleSheet("color:#0095DA; font: bold 20pt 'MS Shell Dlg 2';")
         self.label.setAlignment(Qtt.AlignCenter)
 
         self.groups = Qt.QLabel()
@@ -47,7 +47,7 @@ class AddGroups(Qt.QDialog):
         self.table.setHorizontalHeaderLabels(["Группа", "Добавить"])
 
         for x in self.roles_copy:
-            if x[0].isdigit() or x[1].isdigit() or x == 'Преподаватель': #Обязательно убрать!
+            if x[0].isdigit() or x[1].isdigit():
                 row_count = self.table.rowCount()
                 self.table.insertRow(row_count)
 

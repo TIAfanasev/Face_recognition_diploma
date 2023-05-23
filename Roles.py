@@ -1,9 +1,6 @@
-import time
 from PyQt5 import Qt, QtGui, QtWidgets
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt as Qtt, QTimer
-import shutil
-import threading
 import pickle
 
 import Var
@@ -49,9 +46,17 @@ class Roles(Qt.QDialog):
     def new_role(self):
         role = self.field.toPlainText().strip()
         if role in Var.roles:
-            Qt.QMessageBox.critical(self, 'Ошибка!', 'Роль уже существует!')
+            msg = Qt.QMessageBox(Qt.QMessageBox.Critical, "Ошибка!", "Роль уже существует!",
+                                 Qt.QMessageBox.Close)
+            msg.setWindowIcon(QIcon("Icon.png"))
+            QTimer.singleShot(5000, msg.close)
+            msg.exec_()
         elif not role:
-            Qt.QMessageBox.critical(self, 'Ошибка!', 'Введите роль!')
+            msg = Qt.QMessageBox(Qt.QMessageBox.Critical, "Ошибка!", "Введите роль!",
+                                 Qt.QMessageBox.Close)
+            msg.setWindowIcon(QIcon("Icon.png"))
+            QTimer.singleShot(5000, msg.close)
+            msg.exec_()
         else:
             Var.roles.append(role)
             f = open("roles", "wb")
